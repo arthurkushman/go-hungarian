@@ -98,7 +98,6 @@ func (b *Base) setMaxValues() {
 	}
 
 	for k, row := range b.ReducedExtremums {
-		CONT:
 		for key := range row {
 
 			// don`t touch single elements
@@ -109,7 +108,6 @@ func (b *Base) setMaxValues() {
 						// check if position is free (the same col and another row)
 						if k != rk && key == rkey {
 							delete(b.ReducedExtremums[k], key)
-							goto CONT
 						}
 					}
 				}
