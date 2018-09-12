@@ -2,6 +2,7 @@ package hungarian
 
 import (
 	"math"
+	"fmt"
 )
 
 type Base struct {
@@ -96,6 +97,40 @@ func (b *Base) setMaxValues() {
 			}
 		}
 	}
+	fmt.Println(b.ReducedExtremums);
+	for k, row := range b.ReducedExtremums {
+		for key := range row {
+
+			// don`t touch single elements
+			if len(row) > 1 {
+				for rk, rrow := range b.ReducedExtremums {
+					for rkey := range rrow {
+
+						// check if position is free (the same col and another row)
+						if k != rk && key == rkey {
+							delete(b.ReducedExtremums[k], key)
+						}
+					}
+				}
+			}
+
+		}
+	}
+}
+
+func (b *Base) setMinValues() {
+	for k, row := range b.Reduced {
+		for key, el := range row {
+
+			// if max/min el then check crossing and choose those that not
+			if el == 0 {
+				if b.ReducedExtremums[k] == nil {
+					b.ReducedExtremums[k] = make(map[int]float64, len(b.Matrix))
+				}
+				b.ReducedExtremums[k][key] = b.Matrix[k][key]
+			}
+		}
+	}
 
 	for k, row := range b.ReducedExtremums {
 		for key := range row {
@@ -113,6 +148,18 @@ func (b *Base) setMaxValues() {
 				}
 			}
 
+		}
+	}
+}
+
+func (b *Base) removeExtra() {
+	for k, row := range b.ReducedExtremums {
+		for key := range row {
+
+			// if there are still > 1 - tear down
+			if len(row) > 1 {
+
+			}
 		}
 	}
 }
@@ -156,6 +203,29 @@ REDUCE:
 	b.reduceByMin()
 
 	b.setMaxValues()
+
+	return b.ReducedExtremums
+}
+
+func SolveMin(matrix [][]float64) map[int]map[int]float64 {
+	var b = Base{
+		Matrix:           matrix,
+		Reduced:          [][]float64{},
+		Extremums:        map[int]float64{},
+		ReducedExtremums: map[int]map[int]float64{},
+	}
+
+	// inti reduced matrix with zeroes
+	b.Reduced = make([][]float64, len(matrix))
+	for i := range b.Reduced {
+		b.Reduced[i] = make([]float64, len(matrix))
+	}
+
+	b.reduceByMin()
+	b.reduceByMin()
+
+	b.setMinValues()
+	b.removeExtra()
 
 	return b.ReducedExtremums
 }
