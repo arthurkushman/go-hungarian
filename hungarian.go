@@ -2,7 +2,6 @@ package hungarian
 
 import (
 	"math"
-	"fmt"
 )
 
 type Base struct {
@@ -11,6 +10,8 @@ type Base struct {
 	Extremums        map[int]float64
 	ReducedExtremums map[int]map[int]float64
 }
+
+const ReduceDivisor = 5
 
 func (b *Base) reduceByMax() {
 	// collect extremums
@@ -28,28 +29,58 @@ func (b *Base) reduceByMax() {
 // reduces previously reduced matrix with min (to find maximums)
 // and simple reducer for minimums
 func (b *Base) reduceByMin() {
-	for i := 0; i < len(b.Matrix); i++ {
-		b.Extremums[i] = math.MaxInt64
-	}
+	for i := 0; i < int(math.Round(float64(len(b.Matrix))/ReduceDivisor)); i++ {
+		for i := 0; i < len(b.Matrix); i++ {
+			b.Extremums[i] = math.MaxInt64
+		}
 
-	// rows reduction
-	b.findMinRowExtremums()
-	for k, row := range b.Reduced {
-		for key, el := range row {
-			b.Reduced[k][key] = el - b.Extremums[k]
+		// rows reduction
+		b.findMinRowExtremums()
+
+		for k, row := range b.Reduced {
+			for key, el := range row {
+				b.Reduced[k][key] = el - b.Extremums[k]
+			}
+		}
+
+		// re-init
+		for i := 0; i < len(b.Matrix); i++ {
+			b.Extremums[i] = math.MaxInt64
+		}
+
+		// cols reduction
+		b.findMinColExtremums()
+		for k, row := range b.Reduced {
+			for key, el := range row {
+				b.Reduced[k][key] = el - b.Extremums[key]
+			}
 		}
 	}
+}
 
-	// re-init
-	for i := 0; i < len(b.Matrix); i++ {
-		b.Extremums[i] = math.MaxInt64
-	}
+func (b *Base) reduceByMinMore() {
+	for i := 0; i < int(math.Round(float64(len(b.Matrix))/ReduceDivisor)); i++ {
+		for i := 0; i < len(b.Matrix); i++ {
+			b.Extremums[i] = math.MaxInt64
+		}
 
-	// cols reduction
-	b.findMinColExtremums()
-	for k, row := range b.Reduced {
-		for key, el := range row {
-			b.Reduced[k][key] = el - b.Extremums[key]
+		// rows reduction
+		for k, row := range b.Reduced {
+			for _, el := range row {
+
+				// trying to find more min values > 0
+				if el < b.Extremums[k] && el > 0 {
+					b.Extremums[k] = el
+				}
+			}
+		}
+
+		for k, row := range b.Reduced {
+			for key, el := range row {
+				if el > 0 {
+					b.Reduced[k][key] = el - b.Extremums[k]
+				}
+			}
 		}
 	}
 }
@@ -97,7 +128,7 @@ func (b *Base) setMaxValues() {
 			}
 		}
 	}
-	fmt.Println(b.ReducedExtremums);
+
 	for k, row := range b.ReducedExtremums {
 		for key := range row {
 
@@ -118,7 +149,7 @@ func (b *Base) setMaxValues() {
 	}
 }
 
-func (b *Base) setMinValues() {
+func (b *Base) setValues() {
 	for k, row := range b.Reduced {
 		for key, el := range row {
 
@@ -142,7 +173,13 @@ func (b *Base) setMinValues() {
 
 						// check if position is free (the same col and another row)
 						if k != rk && key == rkey {
-							delete(b.ReducedExtremums[k], key)
+
+							// del extremum in row where more elms
+							if len(rrow) > len(row) {
+								delete(b.ReducedExtremums[rk], rkey)
+							} else {
+								delete(b.ReducedExtremums[k], key)
+							}
 						}
 					}
 				}
@@ -152,13 +189,59 @@ func (b *Base) setMinValues() {
 	}
 }
 
+func (b *Base) initReduced(matrix [][]float64) {
+	// inti reduced matrix with zeroes
+	b.Reduced = make([][]float64, len(matrix))
+	for i := range b.Reduced {
+		b.Reduced[i] = make([]float64, len(matrix))
+	}
+}
+
 func (b *Base) removeExtra() {
 	for k, row := range b.ReducedExtremums {
 		for key := range row {
 
 			// if there are still > 1 - tear down
 			if len(row) > 1 {
+				delete(b.ReducedExtremums[k], key)
+			}
+		}
+	}
+}
 
+// checks if there are still elements that crossing and replaces them with those that not
+func (b *Base) checkAndReplace() {
+	for k, v := range b.ReducedExtremums {
+		for i := range v {
+
+			// check keys
+			for rk, rv := range b.ReducedExtremums {
+				for j := range rv {
+
+					// index is not the same but keys are
+					if k != rk && i == j {
+						//fmt.Println(k, i, rk, j)
+						for mik, miv := range b.Matrix[rk] {
+							thereIs := false
+
+							// check if there is no such el at all
+							// or check all values against this row in matrix
+							for _, rrv := range b.ReducedExtremums {
+								for j := range rrv {
+									if j == mik {
+										thereIs = true
+									}
+								}
+							}
+
+							// insert/replace new/inexistent element
+							if thereIs == false {
+								delete(b.ReducedExtremums[rk], j)
+								b.ReducedExtremums[rk][j] = miv
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -180,29 +263,10 @@ func SolveMax(matrix [][]float64) map[int]map[int]float64 {
 
 	// reduce matrix by max
 	b.reduceByMax()
-	var zInRow = 0
-	zCols := map[int]int{}
 
-	// check if 0s in their correct positions
-	for _, row := range b.Reduced {
-		for key, el := range row {
-			// check if there are > 1 0s in row
-			if el == 0 {
-				zInRow++
-				zCols[key]++
-				if zCols[key] > 1 || zInRow > 1 {
-					goto REDUCE
-				}
-			}
-		}
-		zInRow = 0
-	}
-
-// this is used because of there is no break k expressions in go
-REDUCE:
 	b.reduceByMin()
 
-	b.setMaxValues()
+	b.setValues()
 
 	return b.ReducedExtremums
 }
@@ -221,11 +285,21 @@ func SolveMin(matrix [][]float64) map[int]map[int]float64 {
 		b.Reduced[i] = make([]float64, len(matrix))
 	}
 
-	b.reduceByMin()
+	for i, row := range matrix {
+		for j, v := range row {
+			b.Reduced[i][j] = v
+		}
+	}
+
 	b.reduceByMin()
 
-	b.setMinValues()
+	b.reduceByMinMore()
+
+	b.setValues()
+
 	b.removeExtra()
+
+	b.checkAndReplace()
 
 	return b.ReducedExtremums
 }
