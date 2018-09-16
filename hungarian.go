@@ -220,24 +220,23 @@ func (b *Base) checkAndReplace() {
 
 					// index is not the same but keys are
 					if k != rk && i == j {
-						//fmt.Println(k, i, rk, j)
 						for mik, miv := range b.Matrix[rk] {
 							thereIs := false
 
 							// check if there is no such el at all
 							// or check all values against this row in matrix
 							for _, rrv := range b.ReducedExtremums {
-								for j := range rrv {
-									if j == mik {
+								for jj := range rrv {
+									if jj == mik {
 										thereIs = true
 									}
 								}
 							}
 
-							// insert/replace new/inexistent element
+							// replace to inexistent element
 							if thereIs == false {
 								delete(b.ReducedExtremums[rk], j)
-								b.ReducedExtremums[rk][j] = miv
+								b.ReducedExtremums[rk][mik] = miv
 							}
 						}
 					}

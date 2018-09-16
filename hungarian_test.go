@@ -3,7 +3,6 @@ package hungarian_test
 import (
 	"testing"
 	"hungarian"
-	"fmt"
 )
 
 var testsMax = []struct {
@@ -38,8 +37,7 @@ func TestSolveMax(t *testing.T) {
 }
 
 var testsMin = []struct {
-	m      [][]float64
-	result map[int]map[int]float64
+	m [][]float64
 }{
 	{[][]float64{
 		{6, 2, 3, 4, 5, 11, 3, 8},
@@ -50,27 +48,19 @@ var testsMin = []struct {
 		{6, 2, 3, 4, 5, 11, 3, 8},
 		{4, 6, 8, 9, 7, 1, 5, 3},
 		{9, 1, 2, 5, 2, 7, 3, 8},
-	}, map[int]map[int]float64{
-		0: {2: 3},
-		1: {4: 1},
-		2: {3: 4},
-		3: {7: 3},
-		4: {0: 1},
-		5: {6: 3},
-		6: {4: 1},
-		7: {4: 9},
 	}},
 }
 
 func TestSolveMin(t *testing.T) {
+	data := make(map[int]float64)
 	for _, value := range testsMin {
-		fmt.Println(hungarian.SolveMin(value.m))
-		//for key, val := range hungarian.SolveMin(value.m) {
-		//	for k, v := range val {
-		//		if v != value.result[key][k] {
-		//			t.Fatalf("Want %d, got: %d", v, value.result[key][k])
-		//		}
-		//	}
-		//}
+		for _, val := range hungarian.SolveMin(value.m) {
+			for k, v := range val {
+				if val, ok := data[k]; ok {
+					t.Fatalf("Repeated column %d: %d", k, val)
+				}
+				data[k] = v
+			}
+		}
 	}
 }
