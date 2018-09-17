@@ -237,6 +237,10 @@ func (b *Base) checkAndReplace() {
 							if thereIs == false {
 								delete(b.ReducedExtremums[rk], j)
 								b.ReducedExtremums[rk][mik] = miv
+
+								// here is a recursive call only if we've got similar element and replace em
+								// to check whether there are others, otherwise we don't need an extra checks
+								b.checkAndReplace()
 							}
 						}
 					}
