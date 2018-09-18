@@ -3,6 +3,9 @@ Hungarian algorithm to get optimal solutions of max/min on bi-graph
 
 Examples:
 - find optimal maximum solutions
+
+As an example: 
+You have 10 professionals that can do some work in 10 days, choose 1 for each day that will do the work better, not interrupting with others.
 ```go
 package main
 
@@ -31,6 +34,9 @@ func main() {
 
 - find optimal minimum solutions
 
+For example:
+You need to buy 12 equipment products for your factory in 12 months - each month prices are different (because of a seasons etc), 
+select most cheap prices for each product. 
 ```go
 package main
 
