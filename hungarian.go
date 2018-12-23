@@ -115,40 +115,6 @@ func (b *Base) findMinColExtremums() {
 	}
 }
 
-func (b *Base) setMaxValues() {
-	for k, row := range b.Reduced {
-		for key, el := range row {
-
-			// if max/min el then check crossing and choose those that not
-			if el == 0 {
-				if b.ReducedExtremums[k] == nil {
-					b.ReducedExtremums[k] = make(map[int]float64, len(b.Matrix))
-				}
-				b.ReducedExtremums[k][key] = b.Matrix[k][key]
-			}
-		}
-	}
-
-	for k, row := range b.ReducedExtremums {
-		for key := range row {
-
-			// don`t touch single elements
-			if len(row) > 1 {
-				for rk, rrow := range b.ReducedExtremums {
-					for rkey := range rrow {
-
-						// check if position is free (the same col and another row)
-						if k != rk && key == rkey {
-							delete(b.ReducedExtremums[k], key)
-						}
-					}
-				}
-			}
-
-		}
-	}
-}
-
 func (b *Base) setValues() {
 	for k, row := range b.Reduced {
 		for key, el := range row {
@@ -186,14 +152,6 @@ func (b *Base) setValues() {
 			}
 
 		}
-	}
-}
-
-func (b *Base) initReduced(matrix [][]float64) {
-	// inti reduced matrix with zeroes
-	b.Reduced = make([][]float64, len(matrix))
-	for i := range b.Reduced {
-		b.Reduced[i] = make([]float64, len(matrix))
 	}
 }
 
