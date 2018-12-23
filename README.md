@@ -2,6 +2,7 @@
 Hungarian algorithm to get optimal solutions of max/min on bi-graph
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/arthurkushman/go-hungarian)](https://goreportcard.com/report/github.com/arthurkushman/go-hungarian)
+[![codecov](https://codecov.io/gh/arthurkushman/go-hungarian/branch/master/graph/badge.svg)](https://codecov.io/gh/arthurkushman/go-hungarian)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 Examples:
