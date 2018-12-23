@@ -1,8 +1,8 @@
 package hungarian_test
 
 import (
-	"testing"
 	"hungarian"
+	"testing"
 )
 
 var testsMax = []struct {
@@ -29,7 +29,7 @@ func TestSolveMax(t *testing.T) {
 		for key, val := range hungarian.SolveMax(value.m) {
 			for k, v := range val {
 				if v != value.result[key][k] {
-					t.Fatalf("Want %d, got: %d", v, value.result[key][k])
+					t.Fatalf("Want %f, got: %f", v, value.result[key][k])
 				}
 			}
 		}
@@ -57,7 +57,7 @@ func TestSolveMin(t *testing.T) {
 		for _, val := range hungarian.SolveMin(value.m) {
 			for k, v := range val {
 				if val, ok := data[k]; ok {
-					t.Fatalf("Repeated column %d: %d", k, val)
+					t.Fatalf("Repeated column %d: %f", k, val)
 				}
 				data[k] = v
 			}
