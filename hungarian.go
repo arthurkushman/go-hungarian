@@ -229,6 +229,8 @@ func SolveMax(matrix [][]float64) map[int]map[int]float64 {
 
 	b.setValues()
 
+	b.removeExtra()
+
 	return b.ReducedExtremums
 }
 
