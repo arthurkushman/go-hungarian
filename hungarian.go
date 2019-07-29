@@ -231,6 +231,8 @@ func SolveMax(matrix [][]float64) map[int]map[int]float64 {
 
 	b.removeExtra()
 
+	b.checkAndReplace()
+
 	return b.ReducedExtremums
 }
 
