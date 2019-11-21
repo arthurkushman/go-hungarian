@@ -1,7 +1,7 @@
 package hungarian_test
 
 import (
-	"hungarian"
+	"github.com/arthurkushman/go-hungarian"
 	"testing"
 )
 
