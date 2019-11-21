@@ -73,4 +73,13 @@ func main() {
 }
 ```
 
+### Benchmarks
 
+| Benchmark name | Total Repetitions | Single Repetition Duration (ns/op)
+| :--- | :---: | :---: | 
+| BenchmarkSolveMax8x8-4 | 50000 | 24754 |
+| BenchmarkSolveMax10x10-4 | 30000 | 44627 |
+| BenchmarkSolveMax12x12-4 | 20000 | 62984 |
+| BenchmarkSolveMin8x8-4 | 30000 | 53301 |
+| BenchmarkSolveMin10x10-4 | 10000 | 131101 |
+| BenchmarkSolveMin12x12-4 | 10000 | 183518 |
