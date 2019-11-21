@@ -13,7 +13,7 @@ You have 10 professionals that can do some work in 10 days, choose 1 for each da
 ```go
 package main
 
-import "hungarian"
+import "github.com/arthurkushman/go-hungarian"
 
 func main() {
     hungarian.SolveMax([][]float64{
@@ -44,7 +44,7 @@ select most cheap prices for each product.
 ```go
 package main
 
-import "hungarian"
+import "github.com/arthurkushman/go-hungarian"
 
 func main() {
     hungarian.SolveMin([][]float64{

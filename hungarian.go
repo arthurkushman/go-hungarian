@@ -155,6 +155,7 @@ func (b *Base) setValues() {
 	}
 }
 
+// removes extra intersections if there are any
 func (b *Base) removeExtra() {
 	for k, row := range b.reducedExtremums {
 		for key := range row {
@@ -208,6 +209,7 @@ func (b *Base) checkAndReplace() {
 	}
 }
 
+// SolveMax solves best possible maximum solution by Hungarian algorithm
 func SolveMax(matrix [][]float64) map[int]map[int]float64 {
 	var b = Base{
 		matrix:           matrix,
@@ -236,6 +238,7 @@ func SolveMax(matrix [][]float64) map[int]map[int]float64 {
 	return b.reducedExtremums
 }
 
+// SolveMin solves best possible minimum solution by Hungarian algorithm
 func SolveMin(matrix [][]float64) map[int]map[int]float64 {
 	var b = Base{
 		matrix:           matrix,
