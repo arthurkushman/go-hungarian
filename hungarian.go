@@ -31,7 +31,7 @@ func (b *Base) reduceByMax() {
 func (b *Base) reduceByMin() {
 	for i := 0; i < int(math.Round(float64(len(b.matrix))/ReduceDivisor)); i++ {
 		for i := 0; i < len(b.matrix); i++ {
-			b.extremums[i] = math.MaxInt64
+			b.extremums[i] = math.MaxFloat64
 		}
 
 		// rows reduction
@@ -45,7 +45,7 @@ func (b *Base) reduceByMin() {
 
 		// re-init
 		for i := 0; i < len(b.matrix); i++ {
-			b.extremums[i] = math.MaxInt64
+			b.extremums[i] = math.MaxFloat64
 		}
 
 		// cols reduction
@@ -61,7 +61,7 @@ func (b *Base) reduceByMin() {
 func (b *Base) reduceByMinMore() {
 	for i := 0; i < int(math.Round(float64(len(b.matrix))/ReduceDivisor)); i++ {
 		for i := 0; i < len(b.matrix); i++ {
-			b.extremums[i] = math.MaxInt64
+			b.extremums[i] = math.MaxFloat64
 		}
 
 		// rows reduction
@@ -185,17 +185,22 @@ func (b *Base) checkAndReplace() {
 							// check if there is no such el at all
 							// or check all values against this row in matrix
 							for _, rrv := range b.reducedExtremums {
-								for jj := range rrv {
-									if jj == mik {
-										thereIs = true
-									}
+								if _, ok := rrv[mik]; ok {
+									thereIs = true
+									break
 								}
 							}
 
 							// replace to inexistent element
 							if thereIs == false {
-								delete(b.reducedExtremums[rk], j)
-								b.reducedExtremums[rk][mik] = miv
+								if b.reducedExtremums[rk][j] < b.reducedExtremums[k][j] {
+									delete(b.reducedExtremums[rk], j)
+									b.reducedExtremums[rk][mik] = miv
+
+								} else {
+									delete(b.reducedExtremums[k], j)
+									b.reducedExtremums[k][mik] = miv
+								}
 
 								// here is a recursive call only if we've got similar element and replace em
 								// to check whether there are others, otherwise we don't need an extra checks
