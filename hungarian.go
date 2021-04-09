@@ -2,6 +2,7 @@ package hungarian
 
 import (
 	"math"
+	"sort"
 )
 
 type Base struct {
@@ -129,12 +130,14 @@ func (b *Base) setValues() {
 		}
 	}
 
-	for k, row := range b.reducedExtremums {
+	for k := 0; k < len(b.reducedExtremums); k++ {
+		row := b.reducedExtremums[k]
 		for key := range row {
 
 			// don`t touch single elements
 			if len(row) > 1 {
-				for rk, rrow := range b.reducedExtremums {
+				for rk := 0; rk < len(b.reducedExtremums); rk++ {
+					rrow := b.reducedExtremums[rk]
 					for rkey := range rrow {
 
 						// check if position is free (the same col and another row)
@@ -143,6 +146,8 @@ func (b *Base) setValues() {
 							// del extremum in row where more elms
 							if len(rrow) > len(row) {
 								delete(b.reducedExtremums[rk], rkey)
+							} else if b.reducedExtremums[rk][rkey] < b.reducedExtremums[k][key] {
+								delete(b.reducedExtremums[k], key)
 							} else {
 								delete(b.reducedExtremums[k], key)
 							}
@@ -156,13 +161,33 @@ func (b *Base) setValues() {
 }
 
 // removes extra intersections if there are any
-func (b *Base) removeExtra() {
-	for k, row := range b.reducedExtremums {
-		for key := range row {
+func (b *Base) removeExtra(ascending bool) {
+	for k := 0; k < len(b.reducedExtremums); k++ {
+		row := b.reducedExtremums[k]
+		if len(row) > 1 {
+			// collect all intersection values and delete all but the largest
+			vals := make([]float64, len(row))
+			i := 0
+			for key := range row {
+				vals[i] = row[key]
+				i++
+			}
 
-			// if there are still > 1 - tear down
-			if len(row) > 1 {
-				delete(b.reducedExtremums[k], key)
+			sort.Float64s(vals)
+
+			var valsToDelete []float64
+			if ascending {
+				valsToDelete = vals[:len(vals)-1]
+			} else {
+				valsToDelete = vals[1:]
+			}
+
+			for key := range row {
+				for _, valToDelete := range valsToDelete {
+					if row[key] == valToDelete && len(b.reducedExtremums[k]) > 1 {
+						delete(b.reducedExtremums[k], key)
+					}
+				}
 			}
 		}
 	}
@@ -236,7 +261,7 @@ func SolveMax(matrix [][]float64) map[int]map[int]float64 {
 
 	b.setValues()
 
-	b.removeExtra()
+	b.removeExtra(true)
 
 	b.checkAndReplace()
 
@@ -270,7 +295,7 @@ func SolveMin(matrix [][]float64) map[int]map[int]float64 {
 
 	b.setValues()
 
-	b.removeExtra()
+	b.removeExtra(false)
 
 	b.checkAndReplace()
 
