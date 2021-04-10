@@ -87,6 +87,10 @@ func (b *Base) reduceByMinMore() {
 }
 
 func (b *Base) findMaxExtremums() {
+	for k := range b.matrix {
+		b.extremums[k] = -math.MaxFloat64
+	}
+
 	for k, row := range b.matrix {
 		for _, el := range row {
 			if el > b.extremums[k] {

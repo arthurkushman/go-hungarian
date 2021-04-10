@@ -42,6 +42,17 @@ func TestSolveMax(t *testing.T) {
 	}
 }
 
+func TestSolveMaxNegative(t *testing.T) {
+	testMatrix := [][]float64{
+		{-1000, -1000},
+		{-1000, -1000},
+	}
+	assignment := hungarian.SolveMax(testMatrix)
+	if len(assignment) != 2 {
+		t.Error("expected successful assignment")
+	}
+}
+
 func TestSolveMaxStability(t *testing.T) {
 	passingMatrix := [][]float64{
 		{-999.00, -999.00, -999.00, -999.00, +001.94, +000.88, -999.00, -999.00, -999.00, -999.00, -999.00, -999.00, -1000.00},
