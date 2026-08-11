@@ -8,7 +8,7 @@ type Base struct {
 	matrix           [][]float64
 	reduced          [][]float64
 	extremums        map[int]float64
-	reducedExtremums map[int]map[int]float64
+	reducedExtremums []map[int]float64
 }
 
 const ReduceDivisor = 5
@@ -122,19 +122,21 @@ func (b *Base) setValues() {
 			// if max/min el then check crossing and choose those that not
 			if el == 0 {
 				if b.reducedExtremums[k] == nil {
-					b.reducedExtremums[k] = make(map[int]float64, len(b.matrix))
+					b.reducedExtremums[k] = make(map[int]float64)
 				}
 				b.reducedExtremums[k][key] = b.matrix[k][key]
 			}
 		}
 	}
 
-	for k, row := range b.reducedExtremums {
+	for k := 0; k < len(b.reducedExtremums); k++ {
+		row := b.reducedExtremums[k]
 		for key := range row {
 
 			// don`t touch single elements
 			if len(row) > 1 {
-				for rk, rrow := range b.reducedExtremums {
+				for rk := 0; rk < len(b.reducedExtremums); rk++ {
+					rrow := b.reducedExtremums[rk]
 					for rkey := range rrow {
 
 						// check if position is free (the same col and another row)
@@ -157,7 +159,8 @@ func (b *Base) setValues() {
 
 // removes extra intersections if there are any
 func (b *Base) removeExtra() {
-	for k, row := range b.reducedExtremums {
+	for k := 0; k < len(b.reducedExtremums); k++ {
+		row := b.reducedExtremums[k]
 		for key := range row {
 
 			// if there are still > 1 - tear down
@@ -170,11 +173,13 @@ func (b *Base) removeExtra() {
 
 // checks if there are still elements that crossing and replaces them with those that not
 func (b *Base) checkAndReplace() {
-	for k, v := range b.reducedExtremums {
+	for k := 0; k < len(b.reducedExtremums); k++ {
+		v := b.reducedExtremums[k]
 		for i := range v {
 
 			// check keys
-			for rk, rv := range b.reducedExtremums {
+			for rk := 0; rk < len(b.reducedExtremums); rk++ {
+				rv := b.reducedExtremums[rk]
 				for j := range rv {
 
 					// index is not the same but keys are
@@ -220,7 +225,7 @@ func SolveMax(matrix [][]float64) map[int]map[int]float64 {
 		matrix:           matrix,
 		reduced:          [][]float64{},
 		extremums:        map[int]float64{},
-		reducedExtremums: map[int]map[int]float64{},
+		reducedExtremums: make([]map[int]float64, len(matrix)),
 	}
 
 	// inti reduced matrix with zeroes
@@ -240,7 +245,13 @@ func SolveMax(matrix [][]float64) map[int]map[int]float64 {
 
 	b.checkAndReplace()
 
-	return b.reducedExtremums
+	result := make(map[int]map[int]float64, len(b.reducedExtremums))
+	for k, row := range b.reducedExtremums {
+		if len(row) > 0 {
+			result[k] = row
+		}
+	}
+	return result
 }
 
 // SolveMin solves best possible minimum solution by Hungarian algorithm
@@ -249,7 +260,7 @@ func SolveMin(matrix [][]float64) map[int]map[int]float64 {
 		matrix:           matrix,
 		reduced:          [][]float64{},
 		extremums:        map[int]float64{},
-		reducedExtremums: map[int]map[int]float64{},
+		reducedExtremums: make([]map[int]float64, len(matrix)),
 	}
 
 	// inti reduced matrix with zeroes
@@ -274,5 +285,11 @@ func SolveMin(matrix [][]float64) map[int]map[int]float64 {
 
 	b.checkAndReplace()
 
-	return b.reducedExtremums
+	result := make(map[int]map[int]float64, len(b.reducedExtremums))
+	for k, row := range b.reducedExtremums {
+		if len(row) > 0 {
+			result[k] = row
+		}
+	}
+	return result
 }
