@@ -58,16 +58,16 @@ func main() {
                        		{9, 1, 2, 5, 2, 7, 3, 8},
                        	})
         
-    /* this will result in something similar to
+    /* this will result in
     map[int]map[int]float64{
-		0: {1: 2},
-		1: {4: 1},
-		2: {3: 5},
+		0: {3: 4},
+		1: {2: 2},
+		2: {4: 2},
 		3: {7: 3},
 		4: {0: 1},
-		5: {2: 3},
+		5: {6: 3},
 		6: {5: 1},
-		7: {6: 3},
+		7: {1: 1},
 	}        
     */
 }

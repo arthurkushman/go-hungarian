@@ -1,278 +1,136 @@
 package hungarian
 
-import (
-	"math"
-)
-
-type Base struct {
-	matrix           [][]float64
-	reduced          [][]float64
-	extremums        map[int]float64
-	reducedExtremums map[int]map[int]float64
-}
+import "math"
 
 const ReduceDivisor = 5
 
-func (b *Base) reduceByMax() {
-	// collect extremums
-	b.findMaxExtremums()
-
-	for k, row := range b.matrix {
-		for key, el := range row {
-			if (el - b.extremums[k]) < 0 {
-				b.reduced[k][key] = (el - b.extremums[k]) * -1
-			}
-		}
-	}
-}
-
-// reduces previously reduced matrix with min (to find maximums)
-// and simple reducer for minimums
-func (b *Base) reduceByMin() {
-	for i := 0; i < int(math.Round(float64(len(b.matrix))/ReduceDivisor)); i++ {
-		for i := 0; i < len(b.matrix); i++ {
-			b.extremums[i] = math.MaxFloat64
-		}
-
-		// rows reduction
-		b.findMinRowExtremums()
-
-		for k, row := range b.reduced {
-			for key, el := range row {
-				b.reduced[k][key] = el - b.extremums[k]
-			}
-		}
-
-		// re-init
-		for i := 0; i < len(b.matrix); i++ {
-			b.extremums[i] = math.MaxFloat64
-		}
-
-		// cols reduction
-		b.findMinColExtremums()
-		for k, row := range b.reduced {
-			for key, el := range row {
-				b.reduced[k][key] = el - b.extremums[key]
-			}
-		}
-	}
-}
-
-func (b *Base) reduceByMinMore() {
-	for i := 0; i < int(math.Round(float64(len(b.matrix))/ReduceDivisor)); i++ {
-		for i := 0; i < len(b.matrix); i++ {
-			b.extremums[i] = math.MaxFloat64
-		}
-
-		// rows reduction
-		for k, row := range b.reduced {
-			for _, el := range row {
-
-				// trying to find more min values > 0
-				if el < b.extremums[k] && el > 0 {
-					b.extremums[k] = el
-				}
-			}
-		}
-
-		for k, row := range b.reduced {
-			for key, el := range row {
-				if el > 0 {
-					b.reduced[k][key] = el - b.extremums[k]
-				}
-			}
-		}
-	}
-}
-
-func (b *Base) findMaxExtremums() {
-	for k, row := range b.matrix {
-		for _, el := range row {
-			if el > b.extremums[k] {
-				b.extremums[k] = el
-			}
-		}
-	}
-}
-
-func (b *Base) findMinRowExtremums() {
-	for k, row := range b.reduced {
-		for _, el := range row {
-			if el < b.extremums[k] {
-				b.extremums[k] = el
-			}
-		}
-	}
-}
-
-func (b *Base) findMinColExtremums() {
-	for _, row := range b.reduced {
-		for k, el := range row {
-			if el < b.extremums[k] {
-				b.extremums[k] = el
-			}
-		}
-	}
-}
-
-func (b *Base) setValues() {
-	for k, row := range b.reduced {
-		for key, el := range row {
-
-			// if max/min el then check crossing and choose those that not
-			if el == 0 {
-				if b.reducedExtremums[k] == nil {
-					b.reducedExtremums[k] = make(map[int]float64, len(b.matrix))
-				}
-				b.reducedExtremums[k][key] = b.matrix[k][key]
-			}
-		}
-	}
-
-	for k, row := range b.reducedExtremums {
-		for key := range row {
-
-			// don`t touch single elements
-			if len(row) > 1 {
-				for rk, rrow := range b.reducedExtremums {
-					for rkey := range rrow {
-
-						// check if position is free (the same col and another row)
-						if k != rk && key == rkey {
-
-							// del extremum in row where more elms
-							if len(rrow) > len(row) {
-								delete(b.reducedExtremums[rk], rkey)
-							} else {
-								delete(b.reducedExtremums[k], key)
-							}
-						}
-					}
-				}
-			}
-
-		}
-	}
-}
-
-// removes extra intersections if there are any
-func (b *Base) removeExtra() {
-	for k, row := range b.reducedExtremums {
-		for key := range row {
-
-			// if there are still > 1 - tear down
-			if len(row) > 1 {
-				delete(b.reducedExtremums[k], key)
-			}
-		}
-	}
-}
-
-// checks if there are still elements that crossing and replaces them with those that not
-func (b *Base) checkAndReplace() {
-	for k, v := range b.reducedExtremums {
-		for i := range v {
-
-			// check keys
-			for rk, rv := range b.reducedExtremums {
-				for j := range rv {
-
-					// index is not the same but keys are
-					if k != rk && i == j {
-						for mik, miv := range b.matrix[rk] {
-							thereIs := false
-
-							// check if there is no such el at all
-							// or check all values against this row in matrix
-							for _, rrv := range b.reducedExtremums {
-								if _, ok := rrv[mik]; ok {
-									thereIs = true
-									break
-								}
-							}
-
-							// replace to inexistent element
-							if thereIs == false {
-								if b.reducedExtremums[rk][j] < b.reducedExtremums[k][j] {
-									delete(b.reducedExtremums[rk], j)
-									b.reducedExtremums[rk][mik] = miv
-
-								} else {
-									delete(b.reducedExtremums[k], j)
-									b.reducedExtremums[k][mik] = miv
-								}
-
-								// here is a recursive call only if we've got similar element and replace em
-								// to check whether there are others, otherwise we don't need an extra checks
-								b.checkAndReplace()
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+// SolveMin solves best possible minimum solution by Hungarian algorithm
+func SolveMin(matrix [][]float64) map[int]map[int]float64 {
+	return solve(matrix, false)
 }
 
 // SolveMax solves best possible maximum solution by Hungarian algorithm
 func SolveMax(matrix [][]float64) map[int]map[int]float64 {
-	var b = Base{
-		matrix:           matrix,
-		reduced:          [][]float64{},
-		extremums:        map[int]float64{},
-		reducedExtremums: map[int]map[int]float64{},
-	}
-
-	// inti reduced matrix with zeroes
-	b.reduced = make([][]float64, len(matrix))
-	for i := range b.reduced {
-		b.reduced[i] = make([]float64, len(matrix))
-	}
-
-	// reduce matrix by max
-	b.reduceByMax()
-
-	b.reduceByMin()
-
-	b.setValues()
-
-	b.removeExtra()
-
-	b.checkAndReplace()
-
-	return b.reducedExtremums
+	return solve(matrix, true)
 }
 
-// SolveMin solves best possible minimum solution by Hungarian algorithm
-func SolveMin(matrix [][]float64) map[int]map[int]float64 {
-	var b = Base{
-		matrix:           matrix,
-		reduced:          [][]float64{},
-		extremums:        map[int]float64{},
-		reducedExtremums: map[int]map[int]float64{},
+func solve(matrix [][]float64, maximize bool) map[int]map[int]float64 {
+	result := make(map[int]map[int]float64, len(matrix))
+	if len(matrix) == 0 || len(matrix[0]) == 0 {
+		return result
 	}
 
-	// inti reduced matrix with zeroes
-	b.reduced = make([][]float64, len(matrix))
-	for i := range b.reduced {
-		b.reduced[i] = make([]float64, len(matrix))
-	}
-
+	cost := make([][]float64, len(matrix))
 	for i, row := range matrix {
+		cost[i] = make([]float64, len(row))
 		for j, v := range row {
-			b.reduced[i][j] = v
+			if maximize {
+				cost[i][j] = -v
+			} else {
+				cost[i][j] = v
+			}
 		}
 	}
 
-	b.reduceByMin()
+	for i, j := range assign(cost) {
+		if j < 0 {
+			continue
+		}
+		result[i] = map[int]float64{j: matrix[i][j]}
+	}
 
-	b.reduceByMinMore()
+	return result
+}
 
-	b.setValues()
+// assign returns for each row the index of the column it is matched with,
+// using the O(n^3) Hungarian algorithm on potentials and augmenting paths.
+func assign(cost [][]float64) []int {
+	n := len(cost)
+	m := len(cost[0])
 
-	b.removeExtra()
+	if n > m {
+		transposed := make([][]float64, m)
+		for j := range transposed {
+			transposed[j] = make([]float64, n)
+			for i := range transposed[j] {
+				transposed[j][i] = cost[i][j]
+			}
+		}
 
-	b.checkAndReplace()
+		colToRow := assign(transposed)
+		rowToCol := make([]int, n)
+		for i := range rowToCol {
+			rowToCol[i] = -1
+		}
+		for j, i := range colToRow {
+			rowToCol[i] = j
+		}
+		return rowToCol
+	}
 
-	return b.reducedExtremums
+	u := make([]float64, n+1)
+	v := make([]float64, m+1)
+	p := make([]int, m+1)
+	way := make([]int, m+1)
+
+	for i := 1; i <= n; i++ {
+		p[0] = i
+		j0 := 0
+		minv := make([]float64, m+1)
+		used := make([]bool, m+1)
+		for j := 1; j <= m; j++ {
+			minv[j] = math.Inf(1)
+		}
+
+		for {
+			used[j0] = true
+			i0 := p[j0]
+			delta := math.Inf(1)
+			j1 := 0
+
+			for j := 1; j <= m; j++ {
+				if used[j] {
+					continue
+				}
+
+				cur := cost[i0-1][j-1] - u[i0] - v[j]
+				if cur < minv[j] {
+					minv[j] = cur
+					way[j] = j0
+				}
+				if minv[j] < delta {
+					delta = minv[j]
+					j1 = j
+				}
+			}
+
+			for j := 0; j <= m; j++ {
+				if used[j] {
+					u[p[j]] += delta
+					v[j] -= delta
+				} else {
+					minv[j] -= delta
+				}
+			}
+
+			j0 = j1
+			if p[j0] == 0 {
+				break
+			}
+		}
+
+		for j0 != 0 {
+			j1 := way[j0]
+			p[j0] = p[j1]
+			j0 = j1
+		}
+	}
+
+	rowToCol := make([]int, n)
+	for j := 1; j <= m; j++ {
+		if p[j] != 0 {
+			rowToCol[p[j]-1] = j - 1
+		}
+	}
+	return rowToCol
 }
