@@ -1,8 +1,10 @@
 package hungarian_test
 
 import (
-	"github.com/arthurkushman/go-hungarian"
+	"reflect"
 	"testing"
+
+	"github.com/arthurkushman/go-hungarian"
 )
 
 var testsMax = []struct {
@@ -61,6 +63,31 @@ func TestSolveMin(t *testing.T) {
 				}
 				data[k] = v
 			}
+		}
+	}
+}
+
+func TestSolveMinAllZerosColumn(t *testing.T) {
+	m := [][]float64{
+		{3.16, 0, 0, 0, 0},
+		{2.58, 0, 0, 0, 0},
+		{2.35, 0, 0, 0, 0},
+		{1.76, 0, 0, 0, 0},
+		{70.9, 0, 0, 0, 0},
+	}
+
+	expected := map[int]map[int]float64{
+		0: {1: 0},
+		1: {2: 0},
+		2: {3: 0},
+		3: {0: 1.76},
+		4: {4: 0},
+	}
+
+	for i := 0; i < 100; i++ {
+		res := hungarian.SolveMin(m)
+		if !reflect.DeepEqual(res, expected) {
+			t.Fatalf("Want %v, got: %v", expected, res)
 		}
 	}
 }
